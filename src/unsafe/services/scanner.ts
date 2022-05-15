@@ -12,39 +12,64 @@ export default class ScannerService {
 	constructor(private readonly _storage: StorageService, private readonly _settings: ISettings) {}
 
 	public async scan(files: string[], recursive = true): Promise<void> {
-		const iterator = new Set(files);
+		const uniqueFiles = [...new Set(files)];
+		await Promise.all(
+			uniqueFiles.map((path) => {
+				return this.parse(path, recursive);
+			})
+		);
+	}
 
-		for (let filepath of iterator) {
-			// Cast to the system file path style
-			filepath = path.normalize(filepath);
+	protected async parse(filepath: string, recursive: boolean, prefix?: string): Promise<void> {
+		// Cast to the system file path style
+		filepath = path.normalize(filepath);
+		const uri = URI.file(filepath).toString();
 
-			const uri = URI.file(filepath).toString();
+		const isExistFile = await this._fileExists(filepath);
+		if (!isExistFile) {
+			this._storage.delete(uri);
+			return;
+		}
 
-			const isExistFile = await this._fileExists(filepath);
+		const content = await this._readFile(filepath);
+		const document = TextDocument.create(uri, 'scss', 1, content);
+		const { symbols } = await parseDocument(document, null);
 
-			if (!isExistFile) {
-				this._storage.delete(uri);
+		// Add prefixed versions to the list of symbols. Keep originals for when working in the same file.
+		if (prefix) {
+			const { functions, mixins, variables } = symbols;
+			for (const func of functions) {
+				functions.push({
+					...func,
+					name: `${prefix}${func.name}`,
+				});
+			}
+			for (const mixin of mixins) {
+				mixins.push({
+					...mixin,
+					name: `${prefix}${mixin.name}`,
+				});
+			}
+			for (const variable of variables) {
+				variables.push({
+					...variable,
+					name: `${prefix}${variable.name}`,
+				});
+			}
+		}
 
+		this._storage.set(uri, { ...symbols, filepath });
+
+		if (!recursive || !this._settings.scanImportedFiles) {
+			return;
+		}
+
+		for (const symbol of symbols.imports) {
+			if (symbol.dynamic || symbol.css) {
 				continue;
 			}
 
-			const content = await this._readFile(filepath);
-			const document = TextDocument.create(uri, 'scss', 1, content);
-			const { symbols } = await parseDocument(document, null);
-
-			this._storage.set(uri, { ...symbols, filepath });
-
-			if (!recursive || !this._settings.scanImportedFiles) {
-				continue;
-			}
-
-			for (const symbol of symbols.imports) {
-				if (symbol.dynamic || symbol.css) {
-					continue;
-				}
-
-				iterator.add(symbol.filepath);
-			}
+			await this.parse(symbol.filepath, recursive, symbol.prefix);
 		}
 	}
 

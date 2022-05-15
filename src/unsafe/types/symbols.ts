@@ -37,6 +37,11 @@ export interface IDocumentSymbols extends ISymbols {
 	 * The real path to the file on the file system.
 	 */
 	filepath?: string;
+	/**
+	 * Indicates whether the symbols in this document were forwarded with a prefix
+	 * @link https://sass-lang.com/documentation/at-rules/forward#adding-a-prefix
+	 */
+	prefix?: string;
 }
 
 export interface ISymbols {
