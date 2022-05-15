@@ -12,7 +12,13 @@ export default class ScannerService {
 	constructor(private readonly _storage: StorageService, private readonly _settings: ISettings) {}
 
 	public async scan(files: string[], recursive = true): Promise<void> {
-		const uniqueFiles = [...new Set(files)];
+		let uniqueFiles = [...new Set(files)];
+		if (this._settings.scanImportedFiles) {
+			// If we scan importerd files (which we do by default), don't include partials in the initial scan.
+			// This way we can be reasonably sure that we scan whatever index files there are _before_ we scan
+			// partials which may or may not have been forwarded with a prefix.
+			uniqueFiles = uniqueFiles.filter((file) => !file.includes("/_") && !file.includes("\\_"));
+		}
 		await Promise.all(
 			uniqueFiles.map((path) => {
 				return this.parse(path, recursive);
@@ -51,19 +57,19 @@ export default class ScannerService {
 			for (const func of functions) {
 				symbols.functions.push({
 					...func,
-					name: `${prefix}${func.name}`,
+					name: this._addPrefix(func.name, prefix),
 				});
 			}
 			for (const mixin of mixins) {
 				symbols.mixins.push({
 					...mixin,
-					name: `${prefix}${mixin.name}`,
+					name: this._addPrefix(mixin.name, prefix),
 				});
 			}
 			for (const variable of variables) {
 				symbols.variables.push({
 					...variable,
-					name: `${prefix}${variable.name}`,
+					name: this._addPrefix(variable.name, prefix),
 				});
 			}
 		}
@@ -89,5 +95,9 @@ export default class ScannerService {
 
 	protected _fileExists(filepath: string): Promise<boolean> {
 		return fileExists(filepath);
+	}
+
+	protected _addPrefix(name: string, prefix: string): string {
+		return `$${prefix}${name.substring(1)}`;
 	}
 }
