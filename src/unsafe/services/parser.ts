@@ -9,6 +9,7 @@ import type { IDocument, IDocumentSymbols, IVariable, IImport } from '../types/s
 import { getNodeAtOffset, getParentNodeByType } from '../utils/ast';
 import { buildDocumentContext } from '../utils/document';
 import { getLanguageService } from '../language-service';
+import { findForwardsWithPrefix } from '../utils/imports';
 
 const reDynamicPath = /[#{}\*]/;
 
@@ -39,7 +40,7 @@ async function findDocumentSymbols(document: TextDocument, ast: INode): Promise<
 
 	const result: IDocumentSymbols = {
 		functions: [],
-		imports: convertLinksToImports(links),
+		imports: convertLinksToImports(document, links),
 		mixins: [],
 		variables: []
 	};
@@ -127,16 +128,27 @@ function getMethodParameters(ast: INode, offset: number): IVariable[] {
 		});
 }
 
-export function convertLinksToImports(links: DocumentLink[]): IImport[] {
+export function convertLinksToImports(document: TextDocument, links: DocumentLink[]): IImport[] {
 	const result: IImport[] = [];
+	const documentText = document.getText();
+	const forwardsWithPrefix = findForwardsWithPrefix(documentText);
 
 	for (const link of links) {
 		if (link.target !== undefined) {
-			result.push({
+			const importInfo: IImport = {
 				filepath: link.target,
 				dynamic: reDynamicPath.test(link.target),
 				css: link.target.endsWith('.css')
-			});
+			};
+
+			for (const forward of forwardsWithPrefix) {
+				if (link.target.includes(forward.link)) {
+					importInfo.prefix = forward.prefix;
+					break;
+				}
+			}
+
+			result.push(importInfo)
 		}
 	}
 

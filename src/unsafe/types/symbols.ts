@@ -25,6 +25,7 @@ export interface IImport {
 	filepath: string;
     dynamic: boolean;
     css: boolean;
+	prefix?: string;
 }
 
 export interface IDocumentSymbols extends ISymbols {

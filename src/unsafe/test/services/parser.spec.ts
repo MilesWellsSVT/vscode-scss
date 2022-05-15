@@ -90,6 +90,9 @@ describe('Services/Parser', () => {
 
 	describe('.convertLinksToImports', () => {
 		it('should convert links to imports', () => {
+			const document = helpers.makeDocument([
+				'@import "partial";',
+			]);
 			const links: DocumentLink[] = [
 				{ target: '_partial.scss', range: helpers.makeSameLineRange() }
 			];
@@ -98,12 +101,15 @@ describe('Services/Parser', () => {
 				{ filepath: '_partial.scss', dynamic: false, css: false }
 			];
 
-			const actual = convertLinksToImports(links);
+			const actual = convertLinksToImports(document, links);
 
 			assert.deepStrictEqual(actual, expected);
 		});
 
 		it('should convert dynamic links to imports', () => {
+			const document = helpers.makeDocument([
+				'@import "**/*.scss";',
+			]);
 			const links: DocumentLink[] = [
 				{ target: '**/*.scss', range: helpers.makeSameLineRange() }
 			];
@@ -112,12 +118,15 @@ describe('Services/Parser', () => {
 				{ filepath: '**/*.scss', dynamic: true, css: false }
 			];
 
-			const actual = convertLinksToImports(links);
+			const actual = convertLinksToImports(document, links);
 
 			assert.deepStrictEqual(actual, expected);
 		});
 
 		it('should convert css links to imports', () => {
+			const document = helpers.makeDocument([
+				'@import "file.css";',
+			]);
 			const links: DocumentLink[] = [
 				{ target: 'file.css', range: helpers.makeSameLineRange() }
 			];
@@ -126,7 +135,7 @@ describe('Services/Parser', () => {
 				{ filepath: 'file.css', dynamic: false, css: true }
 			];
 
-			const actual = convertLinksToImports(links);
+			const actual = convertLinksToImports(document, links);
 
 			assert.deepStrictEqual(actual, expected);
 		});
