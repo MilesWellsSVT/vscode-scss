@@ -82,6 +82,28 @@ describe('Services/Scanner', () => {
 			assert.strictEqual(scanner.readFileStub.callCount, 2);
 		});
 
+		it('should find file and imported files with prefix', async () => {
+			const indexDocumentPath = path.resolve('index.scss').toLowerCase();
+			const indexDocumentUri = URI.file(indexDocumentPath).toString();
+			const variablesDocumentPath = path.resolve('variables.scss').toLowerCase();
+			const variablesDocumentUri = URI.file(variablesDocumentPath).toString();
+
+			const storage = new StorageService();
+			const settings = helpers.makeSettings();
+			const scanner = new ScannerServiceTest(storage, settings);
+
+			scanner.fileExistsStub.resolves(true);
+			scanner.readFileStub.onFirstCall().resolves('@forward "variables" as var-*;');
+			scanner.readFileStub.onSecondCall().resolves('$name: value;');
+
+			await scanner.scan([indexDocumentPath]);
+
+			assert.deepStrictEqual(storage.keys(), [indexDocumentUri, variablesDocumentUri]);
+
+			assert.strictEqual(scanner.fileExistsStub.callCount, 2);
+			assert.strictEqual(scanner.readFileStub.callCount, 2);
+		});
+
 		it('should do not find imported files when it not required', async () => {
 			const storage = new StorageService();
 			const settings = helpers.makeSettings({ scanImportedFiles: false });

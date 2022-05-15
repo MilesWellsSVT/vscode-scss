@@ -34,6 +34,13 @@ describe('SCSS Definition Test', () => {
 		await testDefinition(docUri, position(4, 12), expectedLocation);
 	});
 
+	it('should find definition for prefixed mixins', async () => {
+		const expectedDocumentUri = getDocUri('_mixins.scss');
+		const expectedLocation = sameLineLocation(expectedDocumentUri, 1, 1, 6);
+
+		await testDefinition(docUri, position(6, 12), expectedLocation);
+	});
+
 	it('should find definition for variables on vue file', async () => {
 		const expectedDocumentUri = getDocUri('_variables.scss');
 		const expectedLocation = sameLineLocation(expectedDocumentUri, 1, 1, 10);

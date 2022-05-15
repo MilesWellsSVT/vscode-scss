@@ -105,7 +105,7 @@ export async function goDefinition(document: TextDocument, offset: number, stora
 	}
 
 	if (resource.symbols.document !== undefined) {
-		storage.set(document.uri, resource.symbols);
+		storage.merge(document.uri, resource.symbols);
 	}
 
 	const symbolsList = getSymbolsRelatedToDocument(storage, documentPath);

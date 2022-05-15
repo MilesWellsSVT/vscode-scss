@@ -2,4 +2,6 @@
   content: $variable + function();
 
   @include mixin();
+
+  @include mix-mixin();
 }

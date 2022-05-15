@@ -144,7 +144,6 @@ export function convertLinksToImports(document: TextDocument, links: DocumentLin
 			for (const forward of forwardsWithPrefix) {
 				if (link.target.includes(forward.link)) {
 					importInfo.prefix = forward.prefix;
-					break;
 				}
 			}
 

@@ -31,27 +31,37 @@ export default class ScannerService {
 			return;
 		}
 
+		const alreadyParsed = this._storage.get(uri);
+		if (alreadyParsed) {
+			return;
+		}
+
 		const content = await this._readFile(filepath);
 		const document = TextDocument.create(uri, 'scss', 1, content);
 		const { symbols } = await parseDocument(document, null);
 
+		console.log("Parsed " + filepath);
+
 		// Add prefixed versions to the list of symbols. Keep originals for when working in the same file.
 		if (prefix) {
-			const { functions, mixins, variables } = symbols;
+			console.log("Found prefix " + prefix + " in file " + filepath);
+			const functions = [...symbols.functions];
+			const mixins = [...symbols.mixins];
+			const variables = [...symbols.variables];
 			for (const func of functions) {
-				functions.push({
+				symbols.functions.push({
 					...func,
 					name: `${prefix}${func.name}`,
 				});
 			}
 			for (const mixin of mixins) {
-				mixins.push({
+				symbols.mixins.push({
 					...mixin,
 					name: `${prefix}${mixin.name}`,
 				});
 			}
 			for (const variable of variables) {
-				variables.push({
+				symbols.variables.push({
 					...variable,
 					name: `${prefix}${variable.name}`,
 				});

@@ -12,6 +12,20 @@ export default class StorageService {
 		return this._storage.get(key);
 	}
 
+	public merge(key: StorageItemKey, value: StorageItemValue): void {
+		const existing = this.get(key);
+		if (!existing) {
+			this._storage.set(key, value);
+		} else {
+			const newValue: StorageItemValue = value;
+			newValue.functions = newValue.functions.concat(existing.functions);
+			newValue.imports = newValue.imports.concat(existing.imports);
+			newValue.mixins = newValue.mixins.concat(existing.mixins);
+			newValue.variables = newValue.variables.concat(existing.variables);
+			this._storage.set(key, newValue);
+		}
+	}
+
 	public set(key: StorageItemKey, value: StorageItemValue): void {
 		this._storage.set(key, value);
 	}

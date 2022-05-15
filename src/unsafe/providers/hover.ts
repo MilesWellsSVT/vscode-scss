@@ -189,7 +189,7 @@ export async function doHover(document: TextDocument, offset: number, storage: S
 		return null;
 	}
 
-	storage.set(document.uri, resource.symbols);
+	storage.merge(document.uri, resource.symbols);
 
 	const symbolsList = getSymbolsCollection(storage);
 	const documentImports = resource.symbols.imports.map(x => x.filepath);

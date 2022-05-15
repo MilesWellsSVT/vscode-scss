@@ -167,7 +167,7 @@ export async function doSignatureHelp(
 
 	const resource = await parseDocument(document, offset);
 
-	storage.set(document.uri, resource.symbols);
+	storage.merge(document.uri, resource.symbols);
 
 	getSymbolsCollection(storage).forEach(symbols => {
 		symbols[symbolType].forEach((symbol: IMixin | IFunction) => {
