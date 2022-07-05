@@ -290,9 +290,10 @@ function createVariableCompletionItems(
 		if (context.namespace) {
 			// Avoid ending up with namespace.prefix-$variable
 			label = `$${prefix}${asDollarlessVariable(variable.name)}`;
-			// The `.` in the namespace gets replaced unless we have a $ charachter after it
-			insertText = context.word.endsWith(".") ? `.${label}` : label;
-			filterText = `${context.namespace !== "*" ? context.namespace : ""}${insertText}`;
+			const hasDollarSign = context.textBeforeWord.includes('\$');
+			insertText = variable.name;
+			filterText = `${context.namespace !== "*" ? context.namespace : ""}${label}`;
+			if (hasDollarSign) insertText = asDollarlessVariable(variable.name); 
 		}
 
 		completions.push({
